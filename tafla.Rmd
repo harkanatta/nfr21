@@ -1,0 +1,66 @@
+---
+title: "Tafla Nattúrufræðingurinn"
+output: 
+  pdf_document: html_document
+header-includes:
+  - \newfontfamily\comicfont[Path=/Library/Fonts/]{Comic Sans MS}
+  - \newenvironment{ctable}{\comicfont }{}
+  - \newenvironment{capctable}[1][t]{\begin{table}[#1]\centering\comicfont}{\end{table}}
+---
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r cars}
+library(glue)  
+library(tidyverse)  
+library(httr)
+library(kableExtra)
+
+req <- GET("https://api.github.com/repos/harkanatta/nfr21/git/trees/main?recursive=1")
+stop_for_status(req)
+
+filelist <- tibble(path=unlist(lapply(content(req)$tree, "[", "path"), use.names = F) %>% 
+                     stringr::str_subset("myndir") %>% 
+                     stringr::str_subset("jpg")) %>%
+  mutate(URL='https://raw.githubusercontent.com/harkanatta/nfr21/main/',
+         mURL=glue("{URL}{path}")) %>% 
+  select(mURL)
+
+
+df <- read.csv("skjol/Raman785_SLoPP_SLoPPE_Knowitall.csv")
+df$mynd[is.na(df$mynd)]<-""
+df <- df[,c( "mynd", "KnowItAll", "rating.2", "SLoPP","rating","SLoPPE","rating.1")] 
+
+df %>%
+  kbl(booktabs = T) %>%
+  kable_paper(full_width = F) %>%
+  column_spec(1, image = spec_image(
+    filelist$mURL, 150, 150)) %>% 
+  column_spec(2, color = "black",
+              background = spec_color(df[,3], option = "D"),
+              bold =T) %>%
+  column_spec(3, color = "black",
+              background = spec_color(df[,3], option = "D"),
+              bold =T) %>% 
+  column_spec(4, color = "black",
+              background = spec_color(df[,5], option = "D"),
+              bold =T) %>%
+  column_spec(5, color = "black",
+              background = spec_color(df[,5], option = "D"),
+              bold =T) %>% 
+  column_spec(6, color = "black",
+              background = spec_color(df[,7], option = "D"),
+              bold =T) %>%
+  column_spec(7, color = "black",
+              background = spec_color(df[,7], option = "D"),
+              bold =T) %>%
+  footnote(general = "Here is a general comments of the table. ",
+           number = c("Footnote 1; ", "Footnote 2; ", "rass","ress")
+  )
+
+
+```
